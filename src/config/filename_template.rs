@@ -23,8 +23,11 @@
 //!
 //! # Scope (decided in AUD-53)
 //!
-//! Variables are **scalar only**: list/dict item fields (authors, narrators,
-//! series) are intentionally excluded. The audio quality / codec
+//! Variables are **scalar only**: most list/dict item fields (narrators,
+//! series) are intentionally excluded. `author` is the one exception — a
+//! title's `authors` array is flattened to a single `", "`-joined string (the
+//! same convention `catalog`/`collections` display already uses), since users
+//! commonly want an author-level folder. The audio quality / codec
 //! (`content_format`), the cover size and the chapter quality are **not**
 //! variables — they stay hard-wired filename suffixes so downloading a title in
 //! different qualities/sizes never overwrites earlier files.
@@ -67,6 +70,11 @@ pub const TEMPLATE_VARS: &[TemplateVar] = &[
         name: "fulltitle",
         description: "Title plus subtitle",
         example: "Star Force: Enlightenment",
+    },
+    TemplateVar {
+        name: "author",
+        description: "Author(s), joined with \", \" (empty if none listed)",
+        example: "James S. A. Corey",
     },
     TemplateVar {
         name: "account",
@@ -233,9 +241,10 @@ mod tests {
     fn validate_accepts_valid_and_rejects_invalid() {
         assert!(validate("%publication%/%fulltitle% (%release_year%)").is_ok());
         assert!(validate("%title!a%_%publisher!u%").is_ok());
+        assert!(validate("%author%/%fulltitle%").is_ok());
         assert!(validate("100%%").is_ok()); // literal percent
         assert!(validate("plain text, no tokens").is_ok());
-        assert!(validate("%author%").is_err()); // unknown variable
+        assert!(validate("%narrator%").is_err()); // unknown variable
         assert!(validate("%title!x%").is_err()); // unknown modifier
         assert!(validate("%title").is_err()); // unterminated
     }

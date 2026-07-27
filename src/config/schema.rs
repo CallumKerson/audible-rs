@@ -602,7 +602,7 @@ mod tests {
                 .validate()
                 .is_err()
         );
-        assert!(config_with_template("%author%").validate().is_err());
+        assert!(config_with_template("%narrator%").validate().is_err());
         assert!(config_with_template("%title!x%").validate().is_err());
     }
 }

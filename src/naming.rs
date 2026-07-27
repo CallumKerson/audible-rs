@@ -316,6 +316,19 @@ pub(crate) async fn values_from_doc(
         .and_then(serde_json::Value::as_i64)
         .map(|minutes| minutes.to_string())
         .unwrap_or_default();
+    // `authors` is a list of `{name, ...}` objects, not a scalar field — flatten
+    // it the same way `catalog`/`collections` display already do.
+    let authors = doc
+        .get("authors")
+        .and_then(serde_json::Value::as_array)
+        .map(|authors| {
+            authors
+                .iter()
+                .filter_map(|author| author.get("name").and_then(serde_json::Value::as_str))
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
 
     let mut values = std::collections::HashMap::new();
     values.insert("asin", asin.to_owned());
@@ -325,6 +338,7 @@ pub(crate) async fn values_from_doc(
         "fulltitle",
         crate::models::library::build_full_title(doc).unwrap_or_default(),
     );
+    values.insert("author", authors);
     values.insert("account", ctx.account_name().unwrap_or_default());
     values.insert("marketplace", marketplace.to_owned());
     values.insert("publisher", text("publisher_name"));
@@ -781,11 +795,29 @@ mod tests {
     #[test]
     fn template_rejects_unknown_variables_and_modifiers() {
         let ctx = ctx_of(&[]);
-        assert!(expand_template("%author%", &ctx, 230).is_err());
+        assert!(expand_template("%narrator%", &ctx, 230).is_err());
         assert!(expand_template("%title!x%", &ctx, 230).is_err());
         assert!(expand_template("%title", &ctx, 230).is_err());
         // `%%` is a literal percent.
         assert_eq!(expand_template("100%%", &ctx, 230).unwrap(), "100%");
+    }
+
+    #[test]
+    fn template_expands_author_folder() {
+        let with_authors = ctx_of(&[
+            ("author", "James S. A. Corey"),
+            ("fulltitle", "Leviathan Falls"),
+        ]);
+        assert_eq!(
+            expand_template("%author%/%fulltitle%", &with_authors, 230).unwrap(),
+            "James S. A. Corey/Leviathan Falls"
+        );
+        // No authors listed → an `unknown` folder, same as any empty variable.
+        let no_authors = ctx_of(&[("author", ""), ("fulltitle", "Der Astronaut")]);
+        assert_eq!(
+            expand_template("%author%/%fulltitle%", &no_authors, 230).unwrap(),
+            "unknown/Der Astronaut"
+        );
     }
 
     #[test]
