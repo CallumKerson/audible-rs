@@ -572,6 +572,25 @@ mod classify_tests {
     }
 }
 
+/// A tempdir rooted at `/tmp` rather than the platform temp dir: on macOS
+/// `$TMPDIR` (`/var/folders/.../T/`) leaves a broker socket path — this
+/// dir plus `audible-broker-<id>/broker.sock` — over `SUN_LEN` (~104
+/// bytes), and the bind fails. Shared by this module's tests and `broker`'s.
+#[cfg(all(test, unix))]
+pub(crate) fn short_tempdir() -> tempfile::TempDir {
+    tempfile::Builder::new()
+        .prefix("audible-test-")
+        .tempdir_in("/tmp")
+        .expect("/tmp must be writable for socket-bound tests")
+}
+
+/// Named pipes have no such limit, so Windows keeps the platform temp
+/// dir — but `broker`'s tests are not unix-only, so this must exist here.
+#[cfg(all(test, windows))]
+pub(crate) fn short_tempdir() -> tempfile::TempDir {
+    tempfile::tempdir().expect("temp dir must be creatable for broker tests")
+}
+
 // These tests exercise Unix-only plugin mechanics (executable bit,
 // symlinks, `#!/bin/sh` stubs), so they run on Unix. The broker's Windows
 // named-pipe transport (scoped plugins on Windows, AUD-280) is covered in
@@ -621,7 +640,7 @@ mod tests {
 
     #[test]
     fn discovery_is_plugin_dir_only_and_no_override() {
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = short_tempdir();
         let plugin_dir = tmp.path().join("plugins");
         let path_dir = tmp.path().join("bin");
         std::fs::create_dir_all(&plugin_dir).unwrap();
@@ -659,7 +678,7 @@ mod tests {
 
     #[test]
     fn dangling_symlink_is_listed_broken() {
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = short_tempdir();
         let plugin_dir = tmp.path().join("plugins");
         std::fs::create_dir_all(&plugin_dir).unwrap();
         let original = write_plugin(tmp.path(), "cmd_linked.py", "print('hi')\n", false);
@@ -684,7 +703,7 @@ mod tests {
     #[tokio::test]
     async fn install_verifies_names_collisions_and_manifest() {
         let _guard = PROBE_LOCK.lock().await;
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = short_tempdir();
         let plugin_dir = tmp.path().join("plugins");
         let src_dir = tmp.path().join("src");
         std::fs::create_dir_all(&src_dir).unwrap();
@@ -744,7 +763,7 @@ mod tests {
     #[tokio::test]
     async fn describe_parses_validates_and_times_out() {
         let _guard = PROBE_LOCK.lock().await;
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = short_tempdir();
         demo_plugin(tmp.path(), "good", "\"api\",\"config\"", 0);
         demo_plugin(tmp.path(), "badscope", "\"root\"", 0);
         write_plugin(
@@ -775,7 +794,7 @@ mod tests {
     #[tokio::test]
     async fn broken_reason_carries_stderr_and_sdk_hint() {
         let _guard = PROBE_LOCK.lock().await;
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = short_tempdir();
         write_plugin(
             tmp.path(),
             "audible-crash",
@@ -810,7 +829,7 @@ mod tests {
     #[tokio::test]
     async fn tty_grabbing_probe_fails_fast_without_prompting() {
         let _guard = PROBE_LOCK.lock().await;
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = short_tempdir();
         // Mimics an interactive non-plugin tool (AUD-162): prompts and
         // reads from /dev/tty directly, bypassing the captured stdio.
         // With the probe in its own session there is no controlling TTY,
@@ -849,7 +868,7 @@ mod tests {
     #[tokio::test]
     async fn invoke_passes_argv_and_propagates_exit_code() {
         let _guard = PROBE_LOCK.lock().await;
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = short_tempdir();
         let ctx = test_ctx(tmp.path());
         demo_plugin(tmp.path(), "seven", "", 7);
         let plugins = discover_in(tmp.path(), &[], None);
@@ -870,7 +889,7 @@ mod tests {
     #[tokio::test]
     async fn invoke_injects_broker_env_for_scoped_plugins() {
         let _guard = PROBE_LOCK.lock().await;
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = short_tempdir();
         let ctx = test_ctx(tmp.path());
         write_plugin(
             tmp.path(),

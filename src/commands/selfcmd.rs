@@ -1012,15 +1012,20 @@ mod tests {
     #[tokio::test]
     async fn network_failure_is_not_fatal() {
         let (_dir, ctx) = test_ctx();
-        // Reserved TEST-NET-1 address: no route, fails fast.
-        let url = "http://192.0.2.1:9/releases";
+        // A just-released loopback port refuses the connect immediately.
+        // A TEST-NET-1 address (192.0.2.0/24) only fails fast where the
+        // host has no route to it
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        drop(listener);
+        let url = format!("http://127.0.0.1:{port}/releases");
         assert!(
             run(
                 &ctx,
                 Mode::Check { changelog: false },
                 Selection::Newer,
                 false,
-                url,
+                &url,
                 REPO_API,
             )
             .await
