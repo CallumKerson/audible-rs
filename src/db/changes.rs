@@ -129,7 +129,7 @@ pub(crate) enum ChangeClass {
 /// change, returns the **full** top-level value diff as a JSON array
 /// `[{"key","old","new"}]` (keys sorted, **including** volatile keys — the
 /// `change_log` keeps the complete history). Array/key reordering is not a
-/// change. Unparseable / non-object input is treated as a significant change
+/// change. Unparsable / non-object input is treated as a significant change
 /// with no recordable diff (safe side).
 pub(crate) fn classify_change(old: &str, new: &str) -> (ChangeClass, Option<String>) {
     let (Ok(old), Ok(new)) = (
@@ -232,7 +232,7 @@ impl Db {
             if !filter.show_volatile {
                 // Hide volatile-only changes: a 'changed' row whose diff has no
                 // non-volatile key. 'added'/'removed' (no diff) and the rare
-                // unparseable 'changed' (NULL diff) stay visible. Done in SQL so
+                // unparsable 'changed' (NULL diff) stay visible. Done in SQL so
                 // LIMIT counts the visible rows.
                 let placeholders = vec!["?"; VOLATILE_KEYS.len()].join(", ");
                 sql.push_str(&format!(
