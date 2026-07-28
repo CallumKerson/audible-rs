@@ -150,3 +150,17 @@ bin-dir = "audible-{ version }-{ target }/{ bin }"
 pkg-url = "{ repo }/releases/download/v{ version }/audible-{ version }-{ target }.zip"
 pkg-fmt = "zip"
 bin-dir = "audible-{ version }-{ target }/{ bin }.exe"
+
+# typos (https://github.com/crate-ci/typos)
+[package.metadata.typos.files]
+extend-exclude = ["CHANGELOG.md", "proto/", "tests/fixtures/"]
+
+[package.metadata.typos.default.extend-words]
+# "Nd" = N days, in duration-formatting output (e.g. "3d 04:05").
+Nd = "Nd"
+# German words in test fixtures (titles/paths), not misspellings.
+Ein = "Ein"
+Ende = "Ende"
+oder = "oder"
+Unter = "Unter"
+Serie = "Serie"
