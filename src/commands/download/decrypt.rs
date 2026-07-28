@@ -74,7 +74,7 @@ async fn usable_ffmpeg() -> Result<Tool> {
         format!("ffmpeg not found — install it or set AUDIBLE_FFMPEG to its path{INSTALL_HINT}")
     })?;
     match ffmpeg_version(&path).await {
-        // Unparseable version (e.g. a git build) → assume recent enough.
+        // Unparsable version (e.g. a git build) → assume recent enough.
         None => Ok(Tool::Ffmpeg(path)),
         Some((major, minor)) if (major, minor) >= (4, 4) => Ok(Tool::Ffmpeg(path)),
         Some((major, minor)) => bail!(
@@ -98,7 +98,7 @@ fn tool_path(env_var: &str, name: &str) -> Option<PathBuf> {
     crate::fsutil::resolve_with_override(std::env::var_os(env_var), || crate::fsutil::which(name))
 }
 
-/// Parses `<ffmpeg> -version` into `(major, minor)`; `None` if unparseable.
+/// Parses `<ffmpeg> -version` into `(major, minor)`; `None` if unparsable.
 async fn ffmpeg_version(path: &Path) -> Option<(u32, u32)> {
     let output = tokio::process::Command::new(path)
         .arg("-version")

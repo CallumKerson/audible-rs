@@ -141,7 +141,7 @@ pub(crate) fn sso_sibling_host(host: &str) -> Option<String> {
 }
 
 /// True when a cookie `expires` value is in the past. The format mirrors what
-/// the exchange returns (`"11 Jun 2046 20:06:35 GMT"`). Unparseable values are
+/// the exchange returns (`"11 Jun 2046 20:06:35 GMT"`). Unparsable values are
 /// treated as not expired, so a cookie is dropped only when provably stale.
 pub(crate) fn is_expired(expires: &str) -> bool {
     let format = time::macros::format_description!(
@@ -236,7 +236,7 @@ mod tests {
     fn expiry_check() {
         assert!(!is_expired("11 Jun 2046 20:06:35 GMT")); // far future
         assert!(is_expired("11 Jun 2000 20:06:35 GMT")); // past
-        assert!(!is_expired("not a date")); // unparseable → kept
+        assert!(!is_expired("not a date")); // unparsable → kept
     }
 
     #[test]

@@ -987,7 +987,7 @@ fn external_request<'c>(
 
 /// The validated auth mode of an `allowed_hosts` entry: `auto`, `signing`
 /// or `token` only (AUD-120 — cookies are domain-bound and never an
-/// external-host mode), `None` for anything unparseable.
+/// external-host mode), `None` for anything unparsable.
 fn external_auth_mode(configured: &str) -> Option<crate::api::client::AuthMode> {
     use crate::api::client::AuthMode;
     match configured.parse::<AuthMode>() {
