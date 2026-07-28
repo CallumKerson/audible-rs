@@ -258,7 +258,7 @@ mod tests {
         scopes: &[&str],
         invoke_exe: Option<PathBuf>,
     ) -> (Broker, tempfile::TempDir) {
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = crate::plugins::short_tempdir();
         let ctx = test_config(tmp.path());
         let scopes: Vec<String> = scopes.iter().map(|scope| (*scope).to_owned()).collect();
         let broker = match invoke_exe {
@@ -339,7 +339,7 @@ mod tests {
     #[cfg(unix)]
     #[tokio::test]
     async fn invoke_endpoint_runs_builtins_via_self_exec() {
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = crate::plugins::short_tempdir();
         let stub = tmp.path().join("fake-audible");
         std::fs::write(&stub, "#!/bin/sh\necho \"ARGS:$@\"\nexit 0\n").unwrap();
         {
@@ -442,7 +442,7 @@ print("ok")
             return;
         };
         let _guard = PROBE_LOCK.lock().await;
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = crate::plugins::short_tempdir();
         let ctx = test_config(tmp.path());
 
         // A scoped Tier-B plugin with the SDK package beside it, so it is

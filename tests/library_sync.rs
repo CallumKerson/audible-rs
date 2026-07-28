@@ -64,11 +64,13 @@ async fn aborted_sync_never_advances_the_state_token() {
         )
         .mount(&server)
         .await;
-    // Page 2 fails: the sync aborts mid-stream.
+    // Page 2 fails: the sync aborts mid-stream. 500 is retryable, and
+    // `Retry-After: 0` collapses the paginator's backoff without changing the
+    // number of retries.
     Mock::given(method("GET"))
         .and(path("/1.0/library"))
         .and(query_param("continuation_token", "page-2"))
-        .respond_with(ResponseTemplate::new(500))
+        .respond_with(ResponseTemplate::new(500).insert_header("Retry-After", "0"))
         .mount(&server)
         .await;
 
