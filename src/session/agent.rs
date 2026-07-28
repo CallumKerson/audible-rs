@@ -674,7 +674,7 @@ mod tests {
             config_cache: std::sync::Mutex::new(None),
             epoch: Instant::now(),
             admin_token: "T".into(),
-            invoke_exe: PathBuf::from("/bin/true"),
+            invoke_exe: PathBuf::from("true"),
             builtins: vec!["library".to_owned()],
             idle_timeout: idle,
             sessions: RwLock::new(HashMap::new()),
@@ -757,7 +757,7 @@ mod tests {
     async fn jobs_run_async_and_report_status() {
         let tmp = tempfile::tempdir().unwrap();
         let ctx = test_ctx(tmp.path());
-        // /bin/true exits 0 with no output — enough to exercise the
+        // `true` exits 0 with no output — enough to exercise the
         // running → done lifecycle without touching auth.
         let backend = backend(&ctx, Duration::from_secs(900));
         let id = backend
