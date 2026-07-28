@@ -252,7 +252,7 @@ mod tests {
     }
 
     #[test]
-    fn unparseable_expiry_counts_as_expired() {
+    fn unparsable_expiry_counts_as_expired() {
         let tmp = tempfile::tempdir().unwrap();
         let store = TokenStore::new(tmp.path());
         let token = store

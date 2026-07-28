@@ -693,7 +693,7 @@ mod tests {
         // as none would permanently skip the item's real bookmarks (A14).
         assert!(matches!(
             decode_annotations(StatusCode::OK, b"<html>nope</html>"),
-            AnnotationBody::Unparseable
+            AnnotationBody::Unparsable
         ));
         // Valid JSON is the annotation payload.
         let AnnotationBody::Payload(payload) =
@@ -1402,7 +1402,7 @@ pub async fn request_annotations(
     match decode_annotations(status, &bytes) {
         AnnotationBody::Payload(doc) => Ok(Some(doc)),
         AnnotationBody::None => Ok(None),
-        AnnotationBody::Unparseable => Err(ApiError::AnnotationResponse(asin.to_owned())),
+        AnnotationBody::Unparsable => Err(ApiError::AnnotationResponse(asin.to_owned())),
     }
 }
 
@@ -1417,7 +1417,7 @@ enum AnnotationBody {
     /// page, a transient fault). A **failure**, never "no annotations" —
     /// recording it as `none` made `annotations sync --missing` skip the
     /// item's real bookmarks forever (audit 2026-07-17, A14).
-    Unparseable,
+    Unparsable,
 }
 
 fn decode_annotations(status: reqwest::StatusCode, body: &[u8]) -> AnnotationBody {
@@ -1429,7 +1429,7 @@ fn decode_annotations(status: reqwest::StatusCode, body: &[u8]) -> AnnotationBod
     }
     match serde_json::from_slice(body) {
         Ok(doc) => AnnotationBody::Payload(doc),
-        Err(_) => AnnotationBody::Unparseable,
+        Err(_) => AnnotationBody::Unparsable,
     }
 }
 
